@@ -182,6 +182,11 @@ static int rts51x_msg_common(struct rts51x_chip *chip, struct urb *urb,
 	struct completion urb_done;
 	long timeleft;
 	int status;
+	
+#ifdef CONFIG_VMAP_STACK
+	u8 *tb = NULL;
+	u8 *ntb = NULL;
+#endif
 
 	/* don't submit URBs during abort processing */
 	if (test_bit(FLIDX_ABORTING, &rts51x->dflags))
@@ -195,6 +200,19 @@ static int rts51x_msg_common(struct rts51x_chip *chip, struct urb *urb,
 	urb->actual_length = 0;
 	urb->error_count = 0;
 	urb->status = 0;
+
+#ifdef CONFIG_VMAP_STACK
+	/*
+	 * replace transferbuffer with a dma compliant one
+	 * (needed by kernel 4.9.x and ff) */
+	tb = urb->transfer_buffer;
+	ntb = kmalloc(urb->transfer_buffer_length,GFP_KERNEL);
+	if (!ntb)
+		TRACE_RET(chip, STATUS_NOMEM);
+
+	memcpy(ntb,tb,urb->transfer_buffer_length);
+	urb->transfer_buffer = ntb;
+#endif
 
 	/* we assume that if transfer_buffer isn't us->iobuf then it
 	 * hasn't been mapped for DMA.  Yes, this is clunky, but it's
@@ -211,7 +229,11 @@ static int rts51x_msg_common(struct rts51x_chip *chip, struct urb *urb,
 	status = usb_submit_urb(urb, GFP_NOIO);
 	if (status) {
 		/* something went wrong */
+#ifdef CONFIG_VMAP_STACK
+		TRACE_GOTO(chip, MsgCommonFinish);
+#else
 		TRACE_RET(chip, status);
+#endif		
 	}
 
 	/* since the URB has been submitted successfully, it's now okay
@@ -248,6 +270,15 @@ static int rts51x_msg_common(struct rts51x_chip *chip, struct urb *urb,
 	} else {
 		status = urb->status;
 	}
+
+#ifdef CONFIG_VMAP_STACK
+	/*
+	 * copy data to original buffer. */
+	memcpy(tb,ntb,urb->transfer_buffer_length);
+MsgCommonFinish:
+	urb->transfer_buffer = tb;
+	kfree(ntb);	
+#endif
 
 	return status;
 }
