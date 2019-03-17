@@ -122,7 +122,7 @@ static inline void get_current_time(u8 *timeval_buf, int buf_len)
 	if (!timeval_buf || (buf_len < 8))
 		return;
 
-	do_gettimeofday(&tv);
+	tv = ktime_to_timeval(ktime_get_real());
 
 	timeval_buf[0] = (u8) (tv.tv_sec >> 24);
 	timeval_buf[1] = (u8) (tv.tv_sec >> 16);
