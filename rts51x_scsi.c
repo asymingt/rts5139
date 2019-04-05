@@ -2121,7 +2121,7 @@ struct scsi_host_template rts51x_host_template = {
 	 * periodically someone should test to see which setting is more
 	 * optimal.
 	 */
-	.use_clustering = 1,
+	//.use_clustering = 1,
 
 	/* emulated HBA */
 	.emulated = 1,
