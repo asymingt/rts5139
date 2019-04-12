@@ -34,6 +34,7 @@
 #include <linux/mutex.h>
 #include <linux/cdrom.h>
 #include <linux/kernel.h>
+#include <linux/version.h>
 
 #include <scsi/scsi.h>
 #include <scsi/scsi_cmnd.h>
@@ -42,7 +43,7 @@
 #include <scsi/scsi_eh.h>
 #include <scsi/scsi_host.h>
 
-#define DRIVER_VERSION		"v1.04"
+#define DRIVER_VERSION		"v1.05"
 
 #define RTS51X_DESC		"Realtek RTS5139/29 USB card reader driver"
 #define RTS51X_NAME		"rts5139"
@@ -53,10 +54,10 @@
 #define SUPPORT_FILE_OP
 
 #define wait_timeout_x(task_state, msecs)	\
-do {						\
-	set_current_state((task_state));	\
-	schedule_timeout((msecs) * HZ / 1000);	\
-} while (0)
+	do {						\
+		set_current_state((task_state));	\
+		schedule_timeout((msecs) * HZ / 1000);	\
+	} while (0)
 
 #define wait_timeout(msecs)	wait_timeout_x(TASK_INTERRUPTIBLE, (msecs))
 
@@ -117,13 +118,27 @@ extern struct usb_driver rts51x_driver;
 
 static inline void get_current_time(u8 *timeval_buf, int buf_len)
 {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0)) 
+	struct timespec64 tv;
+# else
 	struct timeval tv;
+# endif
 
 	if (!timeval_buf || (buf_len < 8))
 		return;
 
-	do_gettimeofday(&tv);
-
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0)) 
+	ktime_get_real_ts64(&tv);
+	timeval_buf[0] = (u8) (tv.tv_sec >> 24);
+	timeval_buf[1] = (u8) (tv.tv_sec >> 16);
+	timeval_buf[2] = (u8) (tv.tv_sec >> 8);
+	timeval_buf[3] = (u8) (tv.tv_sec);
+	timeval_buf[4] = (u8) (tv.tv_nsec >> 24);
+	timeval_buf[5] = (u8) (tv.tv_nsec >> 16);
+	timeval_buf[6] = (u8) (tv.tv_nsec >> 8);
+	timeval_buf[7] = (u8) (tv.tv_nsec);
+# else
+	gettimeofday(&tv);
 	timeval_buf[0] = (u8) (tv.tv_sec >> 24);
 	timeval_buf[1] = (u8) (tv.tv_sec >> 16);
 	timeval_buf[2] = (u8) (tv.tv_sec >> 8);
@@ -132,6 +147,7 @@ static inline void get_current_time(u8 *timeval_buf, int buf_len)
 	timeval_buf[5] = (u8) (tv.tv_usec >> 16);
 	timeval_buf[6] = (u8) (tv.tv_usec >> 8);
 	timeval_buf[7] = (u8) (tv.tv_usec);
+# endif
 }
 
 #define SND_CTRL_PIPE(chip)	((chip)->usb->send_ctrl_pipe)
@@ -152,13 +168,13 @@ static inline void get_current_time(u8 *timeval_buf, int buf_len)
 
 /* Compatible macros while we switch over */
 static inline void *usb_buffer_alloc(struct usb_device *dev, size_t size,
-				     gfp_t mem_flags, dma_addr_t *dma)
+		gfp_t mem_flags, dma_addr_t *dma)
 {
 	return usb_alloc_coherent(dev, size, mem_flags, dma);
 }
 
 static inline void usb_buffer_free(struct usb_device *dev, size_t size,
-				   void *addr, dma_addr_t dma)
+		void *addr, dma_addr_t dma)
 {
 	return usb_free_coherent(dev, size, addr, dma);
 }
