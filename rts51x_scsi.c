@@ -29,6 +29,7 @@
 #include <linux/slab.h>
 #include <linux/vmalloc.h>
 #include <linux/export.h>
+#include <linux/version.h>
 
 #include <scsi/scsi.h>
 #include <scsi/scsi_eh.h>
@@ -2085,6 +2086,52 @@ static const char *rts5139_info(struct Scsi_Host *host)
 	return "SCSI emulation for RTS5139 USB card reader";
 }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0))
+struct scsi_host_template rts51x_host_template = {
+	/* basic userland interface stuff */
+	.name = RTS51X_NAME,
+	.proc_name = RTS51X_NAME,
+	.show_info = show_info,
+	.write_info = write_info,
+	.info = rts5139_info,
+
+	/* command interface -- queued only */
+	.queuecommand = queuecommand,
+
+	/* error and abort handlers */
+	.eh_abort_handler = command_abort,
+	.eh_device_reset_handler = device_reset,
+	.eh_bus_reset_handler = bus_reset,
+
+	/* queue commands only, only one command per LUN */
+	.can_queue = 1,
+	.cmd_per_lun = 1,
+
+	/* unknown initiator id */
+	.this_id = -1,
+
+	.slave_alloc = slave_alloc,
+	.slave_configure = slave_configure,
+
+	/* lots of sg segments can be handled */
+	.sg_tablesize = SG_ALL,
+
+	/* limit the total size of a transfer to 120 KB */
+	.max_sectors = 240,
+
+	/* emulated HBA */
+	.emulated = 1,
+
+	/* we do our own delay after a device or bus reset */
+	.skip_settle_delay = 1,
+
+	/* sysfs device attributes */
+	/* .sdev_attrs = sysfs_device_attr_list, */
+
+	/* module management */
+	.module = THIS_MODULE
+};
+#else
 struct scsi_host_template rts51x_host_template = {
 	/* basic userland interface stuff */
 	.name = RTS51X_NAME,
@@ -2121,7 +2168,7 @@ struct scsi_host_template rts51x_host_template = {
 	 * periodically someone should test to see which setting is more
 	 * optimal.
 	 */
-	.use_clustering = 1,
+	.use_clustering = 1, // no longer support as of kernel 4.5.1
 
 	/* emulated HBA */
 	.emulated = 1,
@@ -2135,4 +2182,4 @@ struct scsi_host_template rts51x_host_template = {
 	/* module management */
 	.module = THIS_MODULE
 };
-
+#endif
