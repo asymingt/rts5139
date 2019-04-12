@@ -31,16 +31,30 @@ blacklist rtsx_usb_ms
 blacklist rtsx_usb
 ```
 
-Then, make sure you disable module autoloading (and also in the initial RAM filesystem)
+Then, make sure you generate modules.dep and map files.
 
 ```
 sudo depmod -a
+```
+
+Finally, disable module autoloading (and, optionally, also in the initial RAM filesystem)
+
+Blacklist rtsx mmc modules via Grub.  For example, on Fedora (with grub.cfg in EFI):
+
+```
+# modify GRUB_CMDLINE_LINUX in /etc/default/grub and module_blacklist the rtsx_usb_sdmmc, rtsx_usb_ms, and rtsx_usb modules
+grep GRUB_CMDLINE_LINUX /etc/default/grub
+GRUB_CMDLINE_LINUX="resume=/dev/mapper/os-swap rd.lvm.lv=os/root rd.lvm.lv=os/swap rhgb quiet module_blacklist=rtsx_usb_sdmmc,rtsx_usb_ms,rtsx_usb"
+grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
+```
+
+[OPTIONAL] If wanted/needed, update the initramfs:
+
+```
 sudo update-initramfs -u
 ```
 
 Reboot, and check to see if the card reader works.
-
-
 
 
 
