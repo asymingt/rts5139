@@ -208,10 +208,10 @@ RTY_SEND_CMD:
 
 		if (cmd_idx == SELECT_CARD) {
 			if (rsp_type == SD_RSP_TYPE_R2) {
-				if ((buf[3] & 0x1E) != 0x04)
+				if ((buf[3] & 0x1E) && (buf[3] != 0x04))
 					TRACE_RET(chip, STATUS_FAIL);
 			} else if (rsp_type == SD_RSP_TYPE_R2) {
-				if ((buf[3] & 0x1E) != 0x03)
+				if ((buf[3] & 0x1E) && (buf[3] != 0x03))
 					TRACE_RET(chip, STATUS_FAIL);
 			}
 		}
