@@ -162,9 +162,9 @@ static inline void get_current_time(u8 *timeval_buf, int buf_len)
 #define scsi_lock(host)		spin_lock_irq(host->host_lock)
 
 #define GET_PM_USAGE_CNT(chip)	\
-	atomic_read(&((chip)->usb->pusb_intf->pm_usage_cnt))
+	atomic_read(&((chip)->dev.power.usage_count))
 #define SET_PM_USAGE_CNT(chip, cnt)	\
-	atomic_set(&((chip)->usb->pusb_intf->pm_usage_cnt), (cnt))
+	atomic_set(&((chip)->dev.power.usage_count), (cnt))
 
 /* Compatible macros while we switch over */
 static inline void *usb_buffer_alloc(struct usb_device *dev, size_t size,

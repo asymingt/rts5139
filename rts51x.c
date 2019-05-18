@@ -97,13 +97,13 @@ static struct usb_class_driver rts51x_class = {
 
 static inline void usb_autopm_enable(struct usb_interface *intf)
 {
-	atomic_set(&intf->pm_usage_cnt, 1);
+	SET_PM_USAGE_CNT(intf, 1);
 	usb_autopm_put_interface(intf);
 }
 
 static inline void usb_autopm_disable(struct usb_interface *intf)
 {
-	atomic_set(&intf->pm_usage_cnt, 0);
+	SET_PM_USAGE_CNT(intf, 0);
 	usb_autopm_get_interface(intf);
 }
 
@@ -157,10 +157,10 @@ int rts51x_resume(struct usb_interface *iface)
 		mutex_lock(&chip->usb->dev_mutex);
 
 		if (chip->option.ss_en) {
-			if (GET_PM_USAGE_CNT(chip) <= 0) {
+			if (GET_PM_USAGE_CNT(iface) <= 0) {
 				/* Remote wake up, increase pm_usage_cnt */
 				RTS51X_DEBUGP("Incr pm_usage_cnt\n");
-				SET_PM_USAGE_CNT(chip, 1);
+				SET_PM_USAGE_CNT(iface, 1);
 			}
 		}
 
@@ -186,7 +186,7 @@ int rts51x_reset_resume(struct usb_interface *iface)
 	RTS51X_SET_STAT(chip, STAT_RUN);
 
 	if (chip->option.ss_en)
-		SET_PM_USAGE_CNT(chip, 1);
+		SET_PM_USAGE_CNT(iface, 1);
 
 	rts51x_init_chip(chip);
 	rts51x_init_cards(chip);
@@ -805,8 +805,8 @@ static int rts51x_probe(struct usb_interface *intf,
 #ifdef CONFIG_PM
 	if (ss_en) {
 		rts51x->pusb_intf->needs_remote_wakeup = needs_remote_wakeup;
-		SET_PM_USAGE_CNT(chip, 1);
-		RTS51X_DEBUGP("pm_usage_cnt = %d\n", GET_PM_USAGE_CNT(chip));
+		SET_PM_USAGE_CNT(intf, 1);
+		RTS51X_DEBUGP("pm_usage_cnt = %d\n", GET_PM_USAGE_CNT(intf));
 	}
 #endif
 
