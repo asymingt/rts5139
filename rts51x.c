@@ -97,21 +97,13 @@ static struct usb_class_driver rts51x_class = {
 
 static inline void usb_autopm_enable(struct usb_interface *intf)
 {
-	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 14))
-		atomic_set(&intf->dev.power.usage_count, 1);
-	# else
-		atomic_set(&intf->pm_usage_cnt, 1);
-	# endif
+	atomic_set(&intf->dev.power.usage_count, 1);
 	usb_autopm_put_interface(intf);
 }
 
 static inline void usb_autopm_disable(struct usb_interface *intf)
 {
-	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 14))
-		atomic_set(&intf->dev.power.usage_count, 0);
-	# else
-		atomic_set(&intf->pm_usage_cnt, 0);
-	# endif
+	atomic_set(&intf->dev.power.usage_count, 0);
 	usb_autopm_get_interface(intf);
 }
 
@@ -165,19 +157,11 @@ int rts51x_resume(struct usb_interface *iface)
 		mutex_lock(&chip->usb->dev_mutex);
 
 		if (chip->option.ss_en) {
-			#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 14))
-				if (GET_DEV_POWER_USAGE_COUNT(chip) <= 0) {
-					/* Remote wake up, increase dev.power.usage_count */
-					RTS51X_DEBUGP("Incr dev.power.usage_count\n");
-					SET_DEV_POWER_USAGE_COUNT(chip, 1);
+			if (GET_DEV_POWER_USAGE_COUNT(chip) <= 0) {
+				/* Remote wake up, increase dev.power.usage_count */
+				RTS51X_DEBUGP("Incr dev.power.usage_count\n");
+				SET_DEV_POWER_USAGE_COUNT(chip, 1);
 				}
-			# else
-				if (GET_PM_USAGE_CNT(chip) <= 0) {
-					/* Remote wake up, increase pm_usage_cnt */
-					RTS51X_DEBUGP("Incr pm_usage_cnt\n");
-					SET_PM_USAGE_CNT(chip, 1);
-				}
-			# endif
 		}
 
 		RTS51X_SET_STAT(chip, STAT_RUN);
@@ -202,12 +186,7 @@ int rts51x_reset_resume(struct usb_interface *iface)
 	RTS51X_SET_STAT(chip, STAT_RUN);
 
 	if (chip->option.ss_en)
-
-		#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 14))
-			SET_DEV_POWER_USAGE_COUNT(chip, 1);
-		# else
-			SET_PM_USAGE_CNT(chip, 1);
-		# endif
+		SET_DEV_POWER_USAGE_COUNT(chip, 1);
 
 	rts51x_init_chip(chip);
 	rts51x_init_cards(chip);
@@ -826,13 +805,8 @@ static int rts51x_probe(struct usb_interface *intf,
 #ifdef CONFIG_PM
 	if (ss_en) {
 		rts51x->pusb_intf->needs_remote_wakeup = needs_remote_wakeup;
-		#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 14))
-			SET_DEV_POWER_USAGE_COUNT(chip, 1);
-			RTS51X_DEBUGP("dev.power.usage_count = %d\n", GET_DEV_POWER_USAGE_COUNT(chip));
-		# else
-			SET_PM_USAGE_CNT(chip, 1);
-			RTS51X_DEBUGP("pm_usage_cnt = %d\n", GET_PM_USAGE_CNT(chip));
-		# endif
+		SET_DEV_POWER_USAGE_COUNT(chip, 1);
+		RTS51X_DEBUGP("dev.power.usage_count = %d\n", GET_DEV_POWER_USAGE_COUNT(chip));
 	}
 #endif
 
