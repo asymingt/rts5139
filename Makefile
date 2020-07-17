@@ -43,10 +43,10 @@ rts5139-y :=				\
 		ms_mg.o
 
 all:
-	make -C /lib/modules/$(shell uname -r)/build/ SUBDIRS=$(PWD) modules
+	make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) modules
 
 install:
 	cp rts5139.ko /lib/modules/$(shell uname -r)/kernel/drivers/scsi -f
 
 clean:
-	make -C /lib/modules/$(shell uname -r)/build/ SUBDIRS=$(PWD) clean
+	make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) clean
