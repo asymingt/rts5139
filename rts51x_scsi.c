@@ -1994,8 +1994,14 @@ static int show_info(struct seq_file *m, struct Scsi_Host *host)
 
 /* queue a command */
 /* This is always called with scsi_lock(host) held */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,18,0)
+int queuecommand_lck(struct scsi_cmnd *srb)
+{
+	void (*done)(struct scsi_cmnd *) = scsi_done;
+#else
 int queuecommand_lck(struct scsi_cmnd *srb, void (*done) (struct scsi_cmnd *))
 {
+#endif
 	struct rts51x_chip *chip = host_to_rts51x(srb->device->host);
 
 	/* check for state-transition errors */
@@ -2014,7 +2020,9 @@ int queuecommand_lck(struct scsi_cmnd *srb, void (*done) (struct scsi_cmnd *))
 	}
 
 	/* enqueue the command and wake up the control thread */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,18,0)
 	srb->scsi_done = done;
+#endif
 	chip->srb = srb;
 	complete(&chip->usb->cmnd_ready);
 
