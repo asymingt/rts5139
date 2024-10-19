@@ -1944,7 +1944,11 @@ int slave_configure(struct scsi_device *sdev)
 	 * mask.  Guaranteeing proper alignment of the first buffer will
 	 * have the desired effect because, except at the beginning and
 	 * the end, scatter-gather buffers follow page boundaries. */
+
+	/* 6.10.0 moved dma_alignment to scsi_host_template */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 10, 0))
 	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
+#endif
 
 	/* Set the SCSI level to at least 2.  We'll leave it at 3 if that's
 	 * what is originally reported.  We need this to avoid confusing
@@ -2135,6 +2139,10 @@ struct scsi_host_template rts51x_host_template = {
 
 	/* sysfs device attributes */
 	/* .sdev_attrs = sysfs_device_attr_list, */
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 10, 0))
+	.dma_alignment = 512 - 1,
+#endif
 
 	/* module management */
 	.module = THIS_MODULE
