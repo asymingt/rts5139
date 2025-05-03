@@ -145,8 +145,8 @@ struct Scsi_Host;
 struct scsi_device;
 struct scsi_cmnd;
 
-int slave_alloc(struct scsi_device *sdev);
-int slave_configure(struct scsi_device *sdev);
+int sdev_init(struct scsi_device *sdev);
+int sdev_configure(struct scsi_device *sdev, struct queue_limits *limits);
 int queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
 int command_abort(struct scsi_cmnd *srb);
 int bus_reset(struct scsi_cmnd *srb);

@@ -1923,7 +1923,7 @@ int rts51x_scsi_handler(struct scsi_cmnd *srb, struct rts51x_chip *chip)
  * Host functions
  ***********************************************************************/
 
-int slave_alloc(struct scsi_device *sdev)
+int sdev_init(struct scsi_device *sdev)
 {
 	/*
 	 * Set the INQUIRY transfer length to 36.  We don't use any of
@@ -1934,7 +1934,7 @@ int slave_alloc(struct scsi_device *sdev)
 	return 0;
 }
 
-int slave_configure(struct scsi_device *sdev)
+int sdev_configure(struct scsi_device *sdev, struct queue_limits *limits)
 {
 	/* Scatter-gather buffers (all but the last) must have a length
 	 * divisible by the bulk maxpacket size.  Otherwise a data packet
@@ -2122,8 +2122,8 @@ struct scsi_host_template rts51x_host_template = {
 	/* unknown initiator id */
 	.this_id = -1,
 
-	.slave_alloc = slave_alloc,
-	.slave_configure = slave_configure,
+	.sdev_init = sdev_init,
+	.sdev_configure = sdev_configure,
 
 	/* lots of sg segments can be handled */
 	.sg_tablesize = SG_ALL,
@@ -2171,8 +2171,8 @@ struct scsi_host_template rts51x_host_template = {
 	/* unknown initiator id */
 	.this_id = -1,
 
-	.slave_alloc = slave_alloc,
-	.slave_configure = slave_configure,
+	.sdev_init = sdev_init,
+	.sdev_configure = sdev_configure,
 
 	/* lots of sg segments can be handled */
 	.sg_tablesize = SG_ALL,
