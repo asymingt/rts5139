@@ -32,6 +32,7 @@
 #include <linux/blkdev.h>
 #include <linux/completion.h>
 #include <linux/mutex.h>
+#include <linux/version.h>
 #include <scsi/scsi_host.h>
 
 #include "rts51x_chip.h"
@@ -145,8 +146,14 @@ struct Scsi_Host;
 struct scsi_device;
 struct scsi_cmnd;
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 14, 0))
 int sdev_init(struct scsi_device *sdev);
 int sdev_configure(struct scsi_device *sdev, struct queue_limits *limits);
+#else
+int slave_alloc(struct scsi_device *sdev);
+int slave_configure(struct scsi_device *sdev);
+#endif
+
 int queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
 int command_abort(struct scsi_cmnd *srb);
 int bus_reset(struct scsi_cmnd *srb);
