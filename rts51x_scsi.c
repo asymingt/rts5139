@@ -1923,7 +1923,12 @@ int rts51x_scsi_handler(struct scsi_cmnd *srb, struct rts51x_chip *chip)
  * Host functions
  ***********************************************************************/
 
+/* slave_alloc() was renamed into sdev_init() in kernel 6.14 */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 14, 0))
+int sdev_init(struct scsi_device *sdev)
+#else
 int slave_alloc(struct scsi_device *sdev)
+#endif
 {
 	/*
 	 * Set the INQUIRY transfer length to 36.  We don't use any of
@@ -1934,7 +1939,12 @@ int slave_alloc(struct scsi_device *sdev)
 	return 0;
 }
 
+/* slave_configure() was removed from kernel 6.14 */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 14, 0))
+int sdev_configure(struct scsi_device *sdev, struct queue_limits *limits)
+#else
 int slave_configure(struct scsi_device *sdev)
+#endif
 {
 	/* Scatter-gather buffers (all but the last) must have a length
 	 * divisible by the bulk maxpacket size.  Otherwise a data packet
@@ -2122,8 +2132,14 @@ struct scsi_host_template rts51x_host_template = {
 	/* unknown initiator id */
 	.this_id = -1,
 
+	/* slave_alloc() was renamed & slave_configure() was removed in kernel 6.14 */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 14, 0))
+	.sdev_init = sdev_init,
+	.sdev_configure = sdev_configure,
+#else
 	.slave_alloc = slave_alloc,
 	.slave_configure = slave_configure,
+#endif
 
 	/* lots of sg segments can be handled */
 	.sg_tablesize = SG_ALL,
