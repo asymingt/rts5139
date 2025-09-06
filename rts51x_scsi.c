@@ -96,10 +96,18 @@ void rts51x_scsi_show_command(struct scsi_cmnd *srb)
 	case MODE_SELECT:
 		what = (char *)"MODE_SELECT";
 		break;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 14, 9))
+	case RESERVE_6:
+#else
 	case RESERVE:
+#endif
 		what = (char *)"RESERVE";
 		break;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 14, 9))
+	case RELEASE_6:
+#else
 	case RELEASE:
+#endif
 		what = (char *)"RELEASE";
 		break;
 	case COPY:
